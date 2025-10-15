@@ -1,0 +1,19 @@
+# Core
+pandas==2.2.3
+requests==2.32.3
+pydantic==2.9.2
+SQLAlchemy==2.0.36
+psycopg2-binary==2.9.10
+python-dateutil==2.9.0.post0
+
+# App
+streamlit==1.39.0
+altair==5.4.1
+python-dotenv==1.0.1
+
+# Dev
+ruff==0.6.9
+black==24.10.0
+isort==5.13.2
+pytest==8.3.3
+pre-commit==4.0.1
