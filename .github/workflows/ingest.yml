@@ -2,8 +2,8 @@ name: Scheduled Ingestion
 
 on:
   schedule:
-    # Every 30 minutes (GitHub cron uses UTC; adjust as needed)
-    - cron: "*/30 * * * *"
+    # Every 4 hours (GitHub cron uses UTC; adjust as needed)
+    - cron: "0 */4 * * *"
   workflow_dispatch: {}  # allows manual runs from the Actions tab
 
 jobs:
