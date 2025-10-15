@@ -44,6 +44,12 @@ Ingest the **Historic GB Generation Mix** (NESO CKAN), store it in Postgres, and
    python -m ingest.run --days 3
    ```
 
+### Backfill options
+
+- **Full backfill (one-off, non-incremental):**
+  ```bash
+  python -m ingest.run --start-date 2009-01-01T00:00:00Z --no-incremental
+
 5. **Run the Streamlit app**:
    ```bash
    streamlit run app/streamlit_app.py

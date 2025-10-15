@@ -4,6 +4,7 @@ requests==2.32.3
 pydantic==2.9.2
 SQLAlchemy==2.0.36
 psycopg2-binary==2.9.10
+python-dateutil==2.9.0.post0
 
 # App
 streamlit==1.39.0
