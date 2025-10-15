@@ -18,8 +18,8 @@ jobs:
       # Pass secrets as env vars to your Python code
       DB_URL: ${{ secrets.DB_URL }}
       # Optional — only if you want to override defaults in code
-      NESO_RESOURCE_ID: ${{ secrets.NESO_RESOURCE_ID }}
-      NESO_BASE_API: ${{ secrets.NESO_BASE_API }}
+      # NESO_RESOURCE_ID: ${{ secrets.NESO_RESOURCE_ID }}
+      # NESO_BASE_API: ${{ secrets.NESO_BASE_API }}
 
     steps:
       - name: Checkout
