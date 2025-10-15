@@ -1,23 +1,46 @@
-name: ingest
+name: Scheduled Ingestion
 
 on:
   schedule:
-    - cron: "*/30 * * * *"   # every 30 minutes (UTC)
-  workflow_dispatch: {}
+    # Every 30 minutes (GitHub cron uses UTC; adjust as needed)
+    - cron: "*/30 * * * *"
+  workflow_dispatch: {}  # allows manual runs from the Actions tab
 
 jobs:
-  run:
+  ingest:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
+    timeout-minutes: 30
+    concurrency:
+      group: ingest-${{ github.ref }}
+      cancel-in-progress: false
+
+    env:
+      # Pass secrets as env vars to your Python code
+      DB_URL: ${{ secrets.DB_URL }}
+      # Optional — only if you want to override defaults in code
+      NESO_RESOURCE_ID: ${{ secrets.NESO_RESOURCE_ID }}
+      NESO_BASE_API: ${{ secrets.NESO_BASE_API }}
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Install deps
-        run: pip install -r requirements.txt
-      - name: Run ingestion
-        env:
-          DB_URL: ${{ secrets.DB_URL }}
-        run: python -m ingest.run --days 3 --overlap-hours 48
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          # Or: pip install .  (if you ship a pyproject)
+
+      - name: Ingest recent window (with overlap)
+        run: |
+          python -m ingest.run --days 3 --overlap-hours 48
+
+      # Optional: one-off initialisation (keep disabled once done)
+      # - name: Init DB schema
+      #   run: python -m ingest.load --init-db
