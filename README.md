@@ -31,9 +31,15 @@ Ingest the **Historic GB Generation Mix** (NESO CKAN), store it in Postgres, and
 | `CONTRIBUTING.md` | Contribution guidelines, development workflow expectations, and code style notes. |
 | `LICENSE` | MIT licence covering reuse of the project. |
 
+## Assumptions
+
+- **Dataset stability**: The NESO CKAN resource id and column layout remain consistent. Field mappings in `ingest/transform.py` and the warehouse schema in `db/ddl.sql` assume the current structure; upstream changes will require a code/schema update.
+- **48-hour overlap is sufficient**: Incremental runs re-read the last 48 hours to pick up NESO corrections. If the operator observes corrections beyond that window, bump `--overlap-hours` in the scheduler.
+- **Postgres is network-accessible**: Both GitHub Actions (scheduler) and Streamlit Cloud connect directly to the same Postgres instance via `DB_URL`. Provisioning should ensure SSL support and public ingress where required.
+
 **Source of truth (dataset & API):**
-- NESO dataset page shows the resource id and endpoints (`datastore_search`, `datastore_search_sql`).  
-  Resource: `f93d1835-75bc-43e5-84ad-12472b180a98`  
+- NESO dataset page shows the resource id and endpoints (`datastore_search`, `datastore_search_sql`).
+  Resource: `f93d1835-75bc-43e5-84ad-12472b180a98`
   Base: `https://api.neso.energy/api/3/action`
 
 > Note: The dataset is periodically cleansed (historical corrections). The pipeline re-reads an overlap window on each run to merge corrections idempotently.
