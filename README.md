@@ -8,6 +8,32 @@ Ingest the **Historic GB Generation Mix** (NESO CKAN), store it in Postgres, and
 - **db/**: SQLAlchemy model + `ddl.sql` defining the table and indexes.
 - **app/**: Streamlit app reading from Postgres (read-only).
 - **.github/workflows/**: GitHub Actions workflow to schedule ingestion (cron) and a basic CI lint.
+- **ingest/**: Python package that wraps the CKAN API (`datastore_search_sql`), validates payloads, performs type coercion, and **upserts** rows to Postgres.
+- **db/**: Contains the canonical schema definition (`ddl.sql`) plus a SQLAlchemy Core table (`models.py`) covering both the primary fuel columns and derived metrics (e.g., carbon intensity, low/zero/renewable/fossil aggregates).
+- **app/**: Streamlit UI (`streamlit_app.py`) that runs entirely read-only against the Postgres database.
+- **.github/workflows/**: Automation for CI (`ci.yml`) and the scheduled ingestion job (`ingest.yml`).
+
+## Repository structure
+
+| Path | Purpose & key details |
+| --- | --- |
+| `app/streamlit_app.py` | Streamlit dashboard offering time window controls, MW/% toggles, resampling, KPIs, and recent snapshots sourced directly from Postgres. |
+| `ingest/run.py` | CLI entrypoint orchestrating incremental and historical backfills (`python -m ingest.run`). |
+| `ingest/load.py` | Database helpers to initialise the schema (`--init-db`), manage SQLAlchemy engines, and execute upserts with overlap windows. |
+| `ingest/client.py` | CKAN API client handling SQL queries, pagination, and retryable HTTP behaviour. |
+| `ingest/transform.py` | Normalises raw CKAN payloads into the warehouse schema, ensuring columns such as `_mw`, `_pct`, and carbon intensity fields are populated. |
+| `ingest/validate.py` | Pydantic validators that enforce required fields and coerce optional metrics before they reach the database. |
+| `db/ddl.sql` | Canonical Postgres schema for `generation_mix`, including aggregate columns (`low_carbon_mw`, `renewable_mw`, etc.) and ingestion metadata. |
+| `db/models.py` | SQLAlchemy Core table mirroring `ddl.sql` so tests and ad-hoc scripts can reason about the schema programmatically. |
+| `tests/` | Pytest suite covering the CKAN client (`test_client.py`), loaders (`test_load.py`), orchestration helpers (`test_run.py`), transforms (`test_transform.py`), and validators (`test_validate.py`). |
+| `.env.example` | Sample environment file exposing `DB_URL`, `NESO_RESOURCE_ID`, and `NESO_BASE_API`; copy to `.env` for local development. |
+| `requirements.txt` | Pinned runtime (pandas, SQLAlchemy, Streamlit, etc.) and developer dependencies (pytest, black, ruff, isort). |
+| `pyproject.toml` | Tooling configuration for Black, Ruff, and isort (line length, target Python version). |
+| `.pre-commit-config.yaml` | Pre-commit hooks wiring Black, Ruff (with autofix), and isort; run `pre-commit install` to enable locally. |
+| `.github/workflows/ci.yml` | Validates linting and tests on pushes/PRs. |
+| `.github/workflows/ingest.yml` | Schedules the ingestion CLI on a cron to keep Postgres up to date. |
+| `CONTRIBUTING.md` | Contribution guidelines, development workflow expectations, and code style notes. |
+| `LICENSE` | MIT licence covering reuse of the project. |
 
 **Source of truth (dataset & API):**
 - NESO dataset page shows the resource id and endpoints (`datastore_search`, `datastore_search_sql`).  
@@ -60,14 +86,6 @@ Ingest the **Historic GB Generation Mix** (NESO CKAN), store it in Postgres, and
 - **DB**: Use a managed Postgres (e.g., Neon) with SSL in the connection string (e.g., `sslmode=require`).
 - **Scheduler**: GitHub Actions cron triggers `python -m ingest.run` on the default branch.
 - **App**: Deploy Streamlit Community Cloud; store `DB_URL` in **Secrets** (`st.secrets`).
-
-## Repo scripts
-
-- `ingest.run`: Orchestrates incremental fetch (with overlap) and upserts.
-- `ingest.client`: CKAN SQL queries with paging.
-- `ingest.transform`: Type coercion & column standardisation.
-- `ingest.validate`: Pydantic validators.
-- `ingest.load`: DB engine, table DDL, upsert helpers.
 
 ## Test suite overview
 
