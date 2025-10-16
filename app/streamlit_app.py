@@ -28,6 +28,7 @@ Notes
 import os
 from datetime import datetime, timedelta, timezone
 
+import altair as alt
 import pandas as pd
 import streamlit as st
 from dotenv import load_dotenv
@@ -271,30 +272,68 @@ else:
     st.info("Select at least one series to display a chart.")
 
 # ---------------------------
-# Summary table (MWh)
+# Percentage share pie chart
 # ---------------------------
-available_mw_cols = [c for c in cols_mw if c in df_raw.columns]
-if available_mw_cols:
-    df_mw = df_raw.sort_values("datetime_utc")
-    # Approximate energy (MWh) by multiplying each MW reading by the duration
-    # until the next timestamp. The final row lacks a forward interval, so fall
-    # back to the typical cadence (median of observed gaps) to avoid dropping it
-    # from the total.
-    durations = df_mw["datetime_utc"].diff().shift(-1)
-    fallback_duration = durations.dropna().median()
-    if pd.isna(fallback_duration):
-        fallback_duration = timedelta(0)
-    durations = durations.fillna(fallback_duration)
-    duration_hours = durations.dt.total_seconds().div(3600)
-    duration_hours = duration_hours.fillna(0)
-    energy_mwh = df_mw[available_mw_cols].multiply(duration_hours, axis=0).sum()
-    summary_df = energy_mwh.rename(
-        lambda c: c.replace("_mw", "").replace("_", " ").title()
-    ).to_frame("MWh")
-    summary_df.index.name = "Category"
-    st.subheader("Energy summary (MWh)")
-    st.caption("Estimated energy supplied by each source over the selected range.")
-    st.dataframe(summary_df.style.format({"MWh": "{:,.0f}"}))
+# Work from the resampled frame so the pie chart reflects any aggregation
+# choice in the controls while still relying on percentage columns.
+percentage_cols = [c for c in cols_pct if c in df.columns and c != "generation_pct"]
+percentage_means = (
+    df[percentage_cols].mean(skipna=True) if percentage_cols else pd.Series(dtype=float)
+)
+percentage_means = percentage_means.dropna()
+
+total_percentage = percentage_means.sum()
+if total_percentage > 0:
+    pie_df = percentage_means.rename(
+        lambda c: c.replace("_pct", "").replace("_", " ").title()
+    ).reset_index()
+    pie_df.columns = ["Category", "Percentage"]
+    pie_df["Label"] = pie_df.apply(
+        lambda row: f"{row['Category']} ({row['Percentage']:.1f}%)", axis=1
+    )
+
+    category_order = pie_df["Category"].tolist()
+    # Provide a fixed, high-contrast palette so adjacent slices remain distinguishable.
+    colour_palette = [
+        "#4c78a8",
+        "#f58518",
+        "#54a24b",
+        "#e45756",
+        "#72b7b2",
+        "#f2cf5b",
+        "#b279a2",
+        "#ff9da6",
+        "#9c755f",
+        "#bab0ab",
+        "#66c2a5",
+        "#a05195",
+    ]
+    colour_scale = alt.Scale(domain=category_order, range=colour_palette)
+
+    pie_base = alt.Chart(pie_df).encode(
+        theta=alt.Theta("Percentage:Q", stack=True),
+        color=alt.Color("Category:N", legend=alt.Legend(title="Category"), scale=colour_scale),
+        tooltip=[
+            alt.Tooltip("Category:N"),
+            alt.Tooltip("Percentage:Q", format=".2f"),
+        ],
+    )
+
+    pie_chart = pie_base.mark_arc().properties(title="Generation mix share (%)")
+    pie_labels = (
+        alt.Chart(pie_df)
+        .mark_text(radius=110, size=11, color="black")
+        .encode(
+            theta=alt.Theta("Percentage:Q", stack=True),
+            text="Label:N",
+        )
+    )
+
+    st.subheader("Generation share for selected period")
+    st.caption("Average percentage contribution by source between the chosen start and end dates.")
+    st.altair_chart(pie_chart + pie_labels, use_container_width=True)
+else:
+    st.info("Percentage data unavailable for the selected period.")
 
 # ---------------------------
 # Snapshot table
