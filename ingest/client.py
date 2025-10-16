@@ -157,8 +157,6 @@ def iter_window(
         Lists of raw record dictionaries for each page fetched.
 
     Notes:
-        - Offset-based pagination is used. Because results are ordered by
-          `"DATETIME" ASC`, offsets are consistent for a static dataset.
         - If the upstream dataset mutates during iteration, offset pagination
           can theoretically skip or duplicate rows; in practice, ingestion
           is windowed and frequently rerun with overlap to reconcile updates.

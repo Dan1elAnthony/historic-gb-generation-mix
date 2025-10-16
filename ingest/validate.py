@@ -35,7 +35,7 @@ from pydantic import BaseModel, field_validator
 
 
 class Record(BaseModel):
-    """Canonical validated record passed to the transform/load stages.
+    """Validated record passed to the transform/load stages.
 
     Attributes:
         datetime_utc: Observation timestamp as a timezone-aware UTC datetime.

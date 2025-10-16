@@ -5,27 +5,8 @@ Column mapping layer from NESO CKAN field names to the warehouse schema.
 
 Responsibilities
 ----------------
-- Provide a deterministic mapping from upstream NESO keys (e.g., "GAS",
-  "WIND_perc") to our snake_case columns (e.g., "gas_mw", "wind_pct").
-- Offer a small helper, `to_row`, that remaps a validated payload into a
-  dict ready for insertion/upsert into the database.
-
-Conventions
------------
-- Upstream NESO fields are UPPERCASE; percentage fields use the suffix
-  "_perc" in the source dataset.
-- MW keys represent absolute generation/output (megawatts) at the timestamp.
-- Percentage keys represent the share (%) of total generation at the timestamp.
-- Some aggregate/rollup keys (e.g., LOW_CARBON, ZERO_CARBON) are provided by
-  NESO and mapped directly to *_mw columns in the warehouse.
-
-Notes
------
-- `to_row` performs a pure key remap; it does not compute or coerce values.
-  Missing upstream fields will result in `None` values in the output dict,
-  which the loader will write as NULLs. Although the type annotation uses
-  `dict[str, float]`, callers may pass values that are `float | None` after
-  validation; this function forwards them unchanged.
+- Define `MAP_KEYS`, translating NESO CKAN fields to warehouse columns.
+- Provide `to_row` for turning validated payloads into warehouse-ready rows.
 """
 
 from __future__ import annotations
@@ -68,27 +49,13 @@ MAP_KEYS = {
 
 
 def to_row(valid_payload: dict[str, float]) -> dict[str, float]:
-    """Map a validated NESO payload to warehouse column names.
-
-    The function is a simple projection/remap: for each known NESO key,
-    it looks up the value in `valid_payload` and stores it under the target
-    warehouse column name. Keys not present in `valid_payload` are written as
-    `None` (i.e., NULL in the database).
+    """Return a warehouse-keyed copy of the NESO payload.
 
     Args:
-        valid_payload: Dictionary keyed by NESO field names (e.g., "GAS",
-            "WIND_perc") containing numeric values (floats). Values may be
-            `None` if the upstream record omits a field after validation.
+        valid_payload: NESO field/value pairs (floats or None after validation).
 
     Returns:
-        dict[str, float]: A new dict keyed by warehouse column names ready
-        for insertion/upsert. Values are forwarded unchanged (float or None).
-
-    Notes:
-        - This function does not enforce units; upstream MW and % values are
-          already distinguished by their keys and mapped to *_mw or *_pct
-          columns accordingly.
-        - No side effects; purely functional transformation.
+        dict[str, float]: New dict keyed by warehouse column names.
     """
     out = {}
     for src, dst in MAP_KEYS.items():
