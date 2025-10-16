@@ -4,10 +4,6 @@ Ingest the **Historic GB Generation Mix** (NESO CKAN), store it in Postgres, and
 
 ## Architecture
 
-- **ingest/**: Python client that fetches from CKAN (`datastore_search_sql`), validates, and **upserts** to Postgres.
-- **db/**: SQLAlchemy model + `ddl.sql` defining the table and indexes.
-- **app/**: Streamlit app reading from Postgres (read-only).
-- **.github/workflows/**: GitHub Actions workflow to schedule ingestion (cron) and a basic CI lint.
 - **ingest/**: Python package that wraps the CKAN API (`datastore_search_sql`), validates payloads, performs type coercion, and **upserts** rows to Postgres.
 - **db/**: Contains the canonical schema definition (`ddl.sql`) plus a SQLAlchemy Core table (`models.py`) covering both the primary fuel columns and derived metrics (e.g., carbon intensity, low/zero/renewable/fossil aggregates).
 - **app/**: Streamlit UI (`streamlit_app.py`) that runs entirely read-only against the Postgres database.
