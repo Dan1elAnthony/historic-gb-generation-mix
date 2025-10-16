@@ -135,6 +135,42 @@ cols_pct = [
     "other_pct",
     "generation_pct",
 ]
+
+COLUMN_LABELS = {
+    "datetime_utc": "Timestamp (UTC)",
+    "gas_mw": "Gas (MW)",
+    "coal_mw": "Coal (MW)",
+    "nuclear_mw": "Nuclear (MW)",
+    "wind_mw": "Wind (MW)",
+    "wind_emb_mw": "Embedded Wind (MW)",
+    "solar_mw": "Solar (MW)",
+    "hydro_mw": "Hydro (MW)",
+    "biomass_mw": "Biomass (MW)",
+    "imports_mw": "Imports (MW)",
+    "storage_mw": "Storage (MW)",
+    "other_mw": "Other (MW)",
+    "generation_mw": "Total Generation (MW)",
+    "gas_pct": "Gas (%)",
+    "coal_pct": "Coal (%)",
+    "nuclear_pct": "Nuclear (%)",
+    "wind_pct": "Wind (%)",
+    "wind_emb_pct": "Embedded Wind (%)",
+    "solar_pct": "Solar (%)",
+    "hydro_pct": "Hydro (%)",
+    "biomass_pct": "Biomass (%)",
+    "imports_pct": "Imports (%)",
+    "storage_pct": "Storage (%)",
+    "other_pct": "Other (%)",
+    "generation_pct": "Total Generation (%)",
+}
+
+
+def friendly_label(column: str) -> str:
+    """Return a human-readable label for a generation mix column name."""
+
+    return COLUMN_LABELS.get(column, column.replace("_", " ").title())
+
+
 cols_query = cols_mw + [c for c in cols_pct if c not in cols_mw]
 sel = cols_pct if pct_mode else cols_mw
 
@@ -171,6 +207,7 @@ series_selection = st.multiselect(
     options=series_options,
     default=series_default,
     disabled=select_all_series,
+    format_func=friendly_label,
 )
 
 if select_all_series or not series_selection:
@@ -267,7 +304,10 @@ st.table(pd.DataFrame(metric_descriptions, columns=["Metric", "Description"]))
 st.subheader("Generation mix over time")
 chart_cols = [c for c in selected_series if c in df.columns]
 if chart_cols:
-    st.line_chart(df.set_index("datetime_utc")[chart_cols])
+    chart_df = df.set_index("datetime_utc")[chart_cols].rename(
+        columns={col: friendly_label(col) for col in chart_cols}
+    )
+    st.line_chart(chart_df)
 else:
     st.info("Select at least one series to display a chart.")
 
@@ -285,7 +325,7 @@ percentage_means = percentage_means.dropna()
 total_percentage = percentage_means.sum()
 if total_percentage > 0:
     pie_df = percentage_means.rename(
-        lambda c: c.replace("_pct", "").replace("_", " ").title()
+        index=lambda c: friendly_label(c).replace(" (%)", "")
     ).reset_index()
     pie_df.columns = ["Category", "Percentage"]
     pie_df["Label"] = pie_df.apply(
@@ -340,4 +380,5 @@ else:
 # ---------------------------
 st.subheader("Latest snapshot")
 st.caption("Most recent records after resampling, limited to the last 10 intervals.")
-st.dataframe(df.tail(10))
+snapshot_df = df.tail(10).rename(columns={col: friendly_label(col) for col in df.columns})
+st.dataframe(snapshot_df)
