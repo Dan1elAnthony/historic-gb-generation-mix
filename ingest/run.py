@@ -24,7 +24,6 @@ from __future__ import annotations
 import argparse
 from datetime import datetime, timedelta, timezone
 
-import pandas as pd  # noqa: F401  # Imported for potential future analysis/debug use.
 from dateutil import parser as dtp
 
 from .client import iter_window
