@@ -69,6 +69,14 @@ Ingest the **Historic GB Generation Mix** (NESO CKAN), store it in Postgres, and
 - `ingest.validate`: Pydantic validators.
 - `ingest.load`: DB engine, table DDL, upsert helpers.
 
+## Test suite overview
+
+- `tests/test_client.py`: Exercises SQL construction, retry behaviour, and CKAN interactions for the ingestion client.
+- `tests/test_load.py`: Covers engine configuration, schema initialisation, upsert logic, and CLI flows for the loading layer.
+- `tests/test_run.py`: Validates helper datetime utilities and the end-to-end orchestration pipeline including the CLI wrapper.
+- `tests/test_transform.py`: Confirms generation records map to the expected column schema with sensible defaults for missing fields.
+- `tests/test_validate.py`: Checks raw payload cleaning and mandatory field enforcement.
+
 ## Notes
 
 - Timestamps are UTC `TIMESTAMPTZ` (PK). Upserts ensure idempotency.
