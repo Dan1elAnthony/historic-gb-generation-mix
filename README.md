@@ -1,6 +1,6 @@
 # Historic GB Generation Mix
 
-Ingest the **Historic GB Generation Mix** (NESO CKAN), store it in Postgres, and expose a simple Streamlit UI for exploration. **No additional API service is deployed** — the Streamlit app reads the database directly.
+Ingest the **Historic GB Generation Mix** (NESO CKAN), store it in Postgres, and expose a simple Streamlit UI for exploration. **No additional API service is deployed.** The Streamlit app reads the database directly.
 
 ## Architecture
 
