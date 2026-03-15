@@ -1,6 +1,6 @@
 # Historic GB Generation Mix
 
-Ingest the **Historic GB Generation Mix** (NESO CKAN), store it in Postgres, and expose a simple Streamlit UI for exploration. **No additional API service is deployed** — the Streamlit app reads the database directly.
+This project pulls **Historic GB Generation Mix** data from the NESO CKAN API, loads it into a Postgres database, and serves it through a Streamlit dashboard. The app queries Postgres directly, with no intermediate API layer.
 
 ## Architecture
 
@@ -11,7 +11,7 @@ Ingest the **Historic GB Generation Mix** (NESO CKAN), store it in Postgres, and
 
 ## Repository structure
 
-| Path | Purpose & key details |
+| Path | Purpose and key details |
 | --- | --- |
 | `app/streamlit_app.py` | Streamlit dashboard offering time window controls, MW/% toggles, resampling, KPIs, and recent snapshots sourced directly from Postgres. |
 | `ingest/run.py` | CLI entrypoint orchestrating incremental and historical backfills (`python -m ingest.run`). |
@@ -37,7 +37,7 @@ Ingest the **Historic GB Generation Mix** (NESO CKAN), store it in Postgres, and
 - **48-hour overlap is sufficient**: Incremental runs re-read the last 48 hours to pick up NESO corrections. If the operator observes corrections beyond that window, bump `--overlap-hours` in the scheduler.
 - **Postgres is network-accessible**: Both GitHub Actions (scheduler) and Streamlit Cloud connect directly to the same Postgres instance via `DB_URL`. Provisioning should ensure SSL support and public ingress where required.
 
-**Source of truth (dataset & API):**
+**Source of truth (dataset and API):**
 - NESO dataset page shows the resource id and endpoints (`datastore_search`, `datastore_search_sql`).
   Resource: `f93d1835-75bc-43e5-84ad-12472b180a98`
   Base: `https://api.neso.energy/api/3/action`
@@ -47,19 +47,19 @@ Ingest the **Historic GB Generation Mix** (NESO CKAN), store it in Postgres, and
 ## Quickstart (local)
 
 1. **Create a virtualenv** (Python 3.10+):
-   - **PowerShell (Windows 11)**  
+   - **PowerShell (Windows 11)**
      ```pwsh
      python -m venv .venv
      .\.venv\Scripts\Activate.ps1
      pip install -r requirements.txt
      ```
-   - **bash (macOS/Linux)**  
+   - **bash (macOS/Linux)**
      ```bash
      python -m venv .venv && source .venv/bin/activate
      pip install -r requirements.txt
      ```
 
-2. **Copy and edit** `.env.example` → `.env` and set `DB_URL`.  
+2. **Copy and edit** `.env.example` to `.env` and set `DB_URL`.
    (Windows: keeping `sslmode=require` is typically the least fussy.)
 
 3. **Create the table** (one-off):
