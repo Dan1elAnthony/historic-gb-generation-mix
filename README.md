@@ -46,7 +46,7 @@ This project pulls **Historic GB Generation Mix** data from the NESO CKAN API, l
 
 ## Quickstart (local)
 
-1. **Create a virtualenv** (Python 3.10+):
+1. **Create a virtualenv** (Python 3.11+, tested with the patched 3.12.15 release):
    - **PowerShell (Windows 11)**
      ```pwsh
      python -m venv .venv

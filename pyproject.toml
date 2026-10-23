@@ -2,7 +2,7 @@
 name = "historic-gb-generation-mix"
 version = "0.1.0"
 description = "Historic GB Generation Mix: ingestion, storage, and Streamlit UI."
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 
 [tool.black]
 line-length = 100
